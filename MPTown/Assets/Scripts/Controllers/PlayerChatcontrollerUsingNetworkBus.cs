@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Assets.Scripts.Network;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -22,10 +23,13 @@ namespace Assets.Scripts.Controllers
             networkBus.OnMessageReceived -= OnMessageReceived;
         }
 
-        private void OnMessageReceived(byte[] obj)
+        private void OnMessageReceived(NetworkBusEnvelope envelope)
         {
-            var msg = Encoding.UTF8.GetString(obj);
-            contents.Add(msg);
+            if (envelope.PayloadType == "String")
+            {
+                var msg = envelope.Open<string>();
+                contents.Add(msg);
+            }
         }
 
         public List<string> contents = new List<string>();
@@ -49,8 +53,7 @@ namespace Assets.Scripts.Controllers
         
         private void Send(string text)
         {
-            var data = Encoding.UTF8.GetBytes(text);
-            networkBus.SendMessage(data);
+            networkBus.SendMessage<string>(text);
         }
     }
 }
