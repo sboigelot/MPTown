@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Assets.Scripts.Data
 {
@@ -9,9 +6,9 @@ namespace Assets.Scripts.Data
     public class BlockData
     {
         public int BlockIndex;
-        public int TextureIndex;
-        public int MeshIndex;
 
-        public InventoryData Inventory;
+        //public InventoryData Inventory;
+        //public int MeshIndex;
+        //public int TextureIndex;
     }
 }

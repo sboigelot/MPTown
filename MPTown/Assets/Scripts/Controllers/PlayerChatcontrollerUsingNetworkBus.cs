@@ -7,14 +7,14 @@ using UnityEngine.Networking;
 
 namespace Assets.Scripts.Controllers
 {
-    [RequireComponent(typeof(NetworkBroadcastBus))]
+    [RequireComponent(typeof(NetworkBus))]
     class PlayerChatcontrollerUsingNetworkBus : NetworkBehaviour
     {
-        NetworkBroadcastBus networkBus;
+        NetworkBus networkBus;
 
         public void Start()
         {
-            networkBus = GetComponent<NetworkBroadcastBus>();
+            networkBus = GetComponent<NetworkBus>();
             networkBus.OnMessageReceived += OnMessageReceived;
         }
 

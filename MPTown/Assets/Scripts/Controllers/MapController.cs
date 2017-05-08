@@ -1,149 +1,114 @@
-﻿using Assets.Scripts.Controllers;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
-using UnityEngine;
-using UnityEngine.Networking;
-using System;
+﻿using Assets.Scripts.Data;
+using Assets.Scripts.Helpers;
 using Assets.Scripts.Network;
-using Assets.Scripts.Data;
+using UnityEngine;
 
-public class MapController : MonoBehaviour
+namespace Assets.Scripts.Controllers
 {
-    //private NetworkBroadcastBus networkBus;
-
-    private MapData mapData;
-    public MapData MapData
+    public class MapController : NetworkBusUser
     {
-        get
+        private MapData mapData;
+        public MapData MapData
         {
-            return mapData;
-        }
-
-        set
-        {
-            if(mapData != value)
+            get
             {
-                mapData = value;
-                OnMapDataChanged(mapData);
+                return mapData;
             }
-        }
-    }
 
-    private NetworkIdentity GetLocalPlayer()
-    {
-        var allNetworkPlayer = FindObjectsOfType<NetworkIdentity>();
-        foreach (var p in allNetworkPlayer)
-        {
-            if (p.isLocalPlayer)
+            set
             {
-                return p;
-            }
-        }
-        return null;
-    }
-
-    private void OnMapDataChanged(MapData mapData)
-    {        
-        InvalidateVisual();
-                      
-        if (NetworkBroadcastBus.IsServer)
-        {
-            NetworkBroadcastBus.LocalBus.SendMessage<MapData>(mapData);
-        }
-    }
-
-    private void InvalidateVisual()
-    {
-        transform.ClearChildren();
-
-        for (int x = 0; x < 2; x++)
-        {
-            for (int y = 0; y < 2; y++)
-            {
-                for (int z = 0; z < 2; z++)
+                if (mapData == value)
                 {
-                    if (MapData.Chunks[0, 0].Blocks[x, y, z].BlockIndex != 0)
+                    return;
+                }
+
+                mapData = value;
+                OnMapDataChanged();
+            }
+        }
+        
+        private void OnMapDataChanged()
+        {        
+            InvalidateVisual();
+            SendIfServer(mapData);
+        }
+
+        private void InvalidateVisual()
+        {
+            transform.ClearChildren();
+
+            var chunk = MapData.Chunks[0, 0];
+            var blocks = chunk.Blocks;
+
+            for (int x = 0; x < blocks.GetLength(0); x++)
+            {
+                for (int y = 0; y < blocks.GetLength(1); y++)
+                {
+                    for (int z = 0; z < blocks.GetLength(2); z++)
                     {
-                        GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                        cube.transform.SetParent(transform);
-                        cube.transform.position = new Vector3(x, y, z);
-                        cube.transform.localScale = Vector3.one;
+                        if (blocks[x, y, z].BlockIndex != 0)
+                        {
+                            var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                            cube.transform.SetParent(transform);
+                            cube.transform.position = new Vector3(x, y, z);
+                            cube.transform.localScale = Vector3.one;
+                        }
                     }
                 }
             }
         }
-    }
-
-    public void Start()
-    {
-        NetworkBroadcastBus.OnLocalBusFound += OnLocalBusFound;
-    }
-
-    private void OnLocalBusFound(NetworkBroadcastBus bus)
-    {
-        bus.OnMessageReceived += OnMessageReceived;
-    }
-
-    public void OnDestroy()
-    {
-        //networkBus.OnMessageReceived -= OnMessageReceived;
-    }
-
-    public void Initialize()
-    {
-        if(NetworkBroadcastBus.IsServer)
+        
+        public void Initialize()
         {
-            InitMapData();
-        }
-    }
-
-    private void InitMapData()
-    {
-        var map = new MapData();
-        map.Chunks = new ChunkData[1, 1];
-        map.Chunks[0, 0] = new ChunkData();
-        map.Chunks[0, 0].Blocks = new BlockData[2, 2, 2];
-
-        for (int x = 0; x < 2; x++)
-        {
-            for (int y=0; y<2; y++)
+            if(NetworkBus.IsServer)
             {
-                for (int z = 0; z < 2; z++)
+                InitMapData();
+            }
+        }
+
+        private void InitMapData()
+        {
+            var map = new MapData
+            {
+                Chunks = new ChunkData[1, 1]
+            };
+
+            map.Chunks[0, 0] = new ChunkData
+            {
+                Blocks = new BlockData[10, 5, 10]
+            };
+
+            var chunk = map.Chunks[0, 0];
+            var blocks = chunk.Blocks;
+
+            for (int x = 0; x < blocks.GetLength(0); x++)
+            {
+                for (int y = 0; y < blocks.GetLength(1); y++)
                 {
-                    map.Chunks[0, 0].Blocks[x, y, z] = new BlockData
+                    for (int z = 0; z < blocks.GetLength(2); z++)
                     {
-                        BlockIndex = UnityEngine.Random.Range(0, 2),
-                        Inventory = null,
-                        MeshIndex = 0,
-                        TextureIndex = 0
-                    };
+                        blocks[x, y, z] = new BlockData
+                        {
+                            BlockIndex = Random.Range(0, 2),
+                        };
+                    }
                 }
-           }
+            }
+
+            MapData = map;
         }
 
-        MapData = map;
-    }
-    
-    private void OnMessageReceived(NetworkBusEnvelope envelope)
-    {
-        if (!NetworkBroadcastBus.IsServer && envelope.PayloadType == "MapData")
+        protected override void RegisterMessageHandlers()
         {
-            MapData = envelope.Open<MapData>();
+            RegisterMessageHandler<MapData>(OnMapDataReceived);
+        }
+
+        private void OnMapDataReceived(NetworkBusEnvelope envelope)
+        {
+            if (!NetworkBus.IsServer)
+            {
+                MapData = envelope.Open<MapData>();
+            }
         }
     }
 }
-
-
-public static class TransformExtensions
-{
-    public static void ClearChildren(this Transform t)
-    {
-        for (var i = 0; i < t.childCount; i++)
-        {
-            UnityEngine.Object.Destroy(t.GetChild(i).gameObject);
-        }
-    }
-}
-                  

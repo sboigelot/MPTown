@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
 
 namespace Assets.Scripts.Helpers
 {
@@ -21,7 +17,7 @@ namespace Assets.Scripts.Helpers
         {
             var bf = new BinaryFormatter();
             var memoryStream = new MemoryStream(data);
-            return (T)bf.Deserialize(memoryStream);
+            return (T) bf.Deserialize(memoryStream);
         }
     }
 }
