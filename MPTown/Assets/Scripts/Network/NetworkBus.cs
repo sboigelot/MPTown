@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Emit;
 using Assets.Scripts.Helpers;
+using UnityEngine;
 using UnityEngine.Networking;
 
 namespace Assets.Scripts.Network
@@ -44,7 +46,7 @@ namespace Assets.Scripts.Network
             if (!isLocalPlayer)
                 return;
 
-            while (outbox.Count > 0)
+            if (outbox.Count > 0)
             {
                 Dispatch(outbox.Dequeue());
             }
@@ -58,6 +60,20 @@ namespace Assets.Scripts.Network
             }
         }
 
+        public void OnGUI()
+        {
+            GUILayout.BeginVertical();
+            GUILayout.Space(150);
+            GUILayout.TextField(string.Format("inbox: {0}, outbox: {1}",inbox.Count,outbox.Count));
+
+            foreach (var subBoxKey in subBox.Keys)
+            {
+                GUILayout.TextField(string.Format("sub: {0}, {1} / {2}", subBoxKey, subBox[subBoxKey].Count, subBox[subBoxKey][0].GroupTotal));
+            }
+
+            GUILayout.EndVertical();
+        }
+
         public void SendMessage<T>(T message)
         {
             outbox.Enqueue(new NetworkBusEnvelope(message));
@@ -69,38 +85,35 @@ namespace Assets.Scripts.Network
                 return;
 
             var data = BinarySerializationHelper.Serialize(message);
-            var packets = new List<byte[]> {data};
 
             if (data.Length > MaxBufferSize)
             {
-                packets.Clear();
+                var splitSize = MaxBufferSize / 2;
                 var groupId = Guid.NewGuid();
-                var groupSize = (int) Math.Ceiling((float) data.Length / MaxBufferSize);
+                var groupSize = (int) Math.Ceiling((float) data.Length / splitSize);
 
                 for (var i = 0; i < groupSize; i ++)
                 {
-                    var payload = data.Skip(i * MaxBufferSize).Take(MaxBufferSize).ToArray();
+                    var payload = data.Skip(i * splitSize).Take(splitSize).ToArray();
                     var subEnveloppe = new NetworkBusEnvelope(
                         groupId,
                         i,
                         groupSize,
                         payload);
-
-                    var packet = BinarySerializationHelper.Serialize(subEnveloppe);
-                    packets.Add(packet);
+                    
+                    outbox.Enqueue(subEnveloppe);
                 }
+
+                return;
             }
-
-            foreach (var packet in packets)
+            
+            if (isServer)
             {
-                if (isServer)
-                {
-                    Broadcast(packet);
-                }
-                else
-                {
-                    CmdSendToServer(packet);
-                }
+                Broadcast(data);
+            }
+            else
+            {
+                CmdSendToServer(data);
             }
         }
 

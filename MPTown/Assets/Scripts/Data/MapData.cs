@@ -5,6 +5,6 @@ namespace Assets.Scripts.Data
     [Serializable]
     public class MapData
     {
-        public ChunkData[,] Chunks;
+        public ChunkData[,,] Chunks;
     }
 }

@@ -1,12 +1,20 @@
-﻿using Assets.Scripts.Data;
+﻿using System;
+using Assets.Scripts.Data;
 using Assets.Scripts.Helpers;
+using Assets.Scripts.McChunk;
 using Assets.Scripts.Network;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Assets.Scripts.Controllers
 {
     public class MapController : NetworkBusUser
     {
+        public Vector3 ChunckSize = new Vector3(16,16,16);
+        public Vector3 MapSize = new Vector3(2, 1, 2);
+        public float BlockSize = 1f;
+        public Material ChunckMaterial;
+
         private MapData mapData;
         public MapData MapData
         {
@@ -37,27 +45,56 @@ namespace Assets.Scripts.Controllers
         {
             transform.ClearChildren();
 
-            var chunk = MapData.Chunks[0, 0];
-            var blocks = chunk.Blocks;
-
-            for (int x = 0; x < blocks.GetLength(0); x++)
-            {
-                for (int y = 0; y < blocks.GetLength(1); y++)
+            this.ForXyz(
+                mapData.Chunks.GetLength(0), 
+                mapData.Chunks.GetLength(1), 
+                mapData.Chunks.GetLength(2),
+                (x, y, z) =>
                 {
-                    for (int z = 0; z < blocks.GetLength(2); z++)
-                    {
-                        if (blocks[x, y, z].BlockIndex != 0)
-                        {
-                            var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                            cube.transform.SetParent(transform);
-                            cube.transform.position = new Vector3(x, y, z);
-                            cube.transform.localScale = Vector3.one;
-                        }
-                    }
-                }
-            }
+                    var chunk = MapData.Chunks[x, y, z];
+                    RenderChunk(chunk, new Vector3(x, y, z));
+                });
         }
-        
+
+        private void RenderChunk(ChunkData chunk, Vector3 position)
+        {
+            var chunckWorldPosition = ChunkToWorldPosition(position);
+
+            if (chunk.Blocks == null)
+            {
+                return;
+            }
+
+            var chunkGameObject = new GameObject("Chunk "+ position);
+            chunkGameObject.transform.SetParent(transform);
+            chunkGameObject.transform.position = chunckWorldPosition;
+
+            var meshFilter = chunkGameObject.AddComponent<MeshFilter>();
+            var meshRenderer = chunkGameObject.AddComponent<MeshRenderer>();
+            meshRenderer.sharedMaterial = ChunckMaterial;
+            var chunckController = chunkGameObject.AddComponent<ChunkController>();
+            chunckController.TextureBlockSize = new Vector2(128, 128);
+            chunckController.ChunkData = chunk;
+            chunckController.Size = new RVector3(ChunckSize);
+            chunckController.Position = new RVector3(position);
+        }
+
+        private Vector3 ChunkToWorldPosition(Vector3 position)
+        {
+            return new Vector3(
+                position.x * BlockSize * ChunckSize.x,
+                position.y * BlockSize * ChunckSize.z,
+                position.z * BlockSize * ChunckSize.z);
+        }
+
+        private Vector3 BlockToWorldPosition(Vector3 position)
+        {
+            return new Vector3(
+                position.x * BlockSize,
+                position.y * BlockSize,
+                position.z * BlockSize);
+        }
+
         public void Initialize()
         {
             if(NetworkBus.IsServer)
@@ -68,36 +105,9 @@ namespace Assets.Scripts.Controllers
 
         private void InitMapData()
         {
-            var map = new MapData
-            {
-                Chunks = new ChunkData[1, 1]
-            };
-
-            map.Chunks[0, 0] = new ChunkData
-            {
-                Blocks = new BlockData[10, 5, 10]
-            };
-
-            var chunk = map.Chunks[0, 0];
-            var blocks = chunk.Blocks;
-
-            for (int x = 0; x < blocks.GetLength(0); x++)
-            {
-                for (int y = 0; y < blocks.GetLength(1); y++)
-                {
-                    for (int z = 0; z < blocks.GetLength(2); z++)
-                    {
-                        blocks[x, y, z] = new BlockData
-                        {
-                            BlockIndex = Random.Range(0, 2),
-                        };
-                    }
-                }
-            }
-
-            MapData = map;
+            MapData = new MapGenerator().GenerateMap(MapSize, ChunckSize, Random.Range(100,10000), 16f);
         }
-
+        
         protected override void RegisterMessageHandlers()
         {
             RegisterMessageHandler<MapData>(OnMapDataReceived);

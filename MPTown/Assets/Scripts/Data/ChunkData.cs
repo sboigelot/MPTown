@@ -3,8 +3,8 @@
 namespace Assets.Scripts.Data
 {
     [Serializable]
-    public class ChunkData
+    public struct ChunkData
     {
-        public BlockData[,,] Blocks;
+        public ushort[,,] Blocks;
     }
 }
