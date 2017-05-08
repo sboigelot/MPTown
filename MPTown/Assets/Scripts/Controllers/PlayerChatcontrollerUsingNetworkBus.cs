@@ -8,22 +8,11 @@ using UnityEngine.Networking;
 namespace Assets.Scripts.Controllers
 {
     [RequireComponent(typeof(NetworkBus))]
-    class PlayerChatcontrollerUsingNetworkBus : NetworkBehaviour
+    class PlayerChatcontrollerUsingNetworkBus : NetworkBusUser
     {
         NetworkBus networkBus;
-
-        public void Start()
-        {
-            networkBus = GetComponent<NetworkBus>();
-            networkBus.OnMessageReceived += OnMessageReceived;
-        }
-
-        public void OnDestroy()
-        {
-            networkBus.OnMessageReceived -= OnMessageReceived;
-        }
-
-        private void OnMessageReceived(NetworkBusEnvelope envelope)
+        
+        private void OnStringReceived(NetworkBusEnvelope envelope)
         {
             if (envelope.PayloadType == "String")
             {
@@ -35,8 +24,9 @@ namespace Assets.Scripts.Controllers
         public List<string> contents = new List<string>();
         public void OnGUI()
         {
-            if (!isLocalPlayer)
+            if (!NetworkBus.isLocalPlayer)
                 return;
+
             GUILayout.BeginVertical();
             if (GUILayout.Button("Send message"))
             {
@@ -53,7 +43,12 @@ namespace Assets.Scripts.Controllers
         
         private void Send(string text)
         {
-            networkBus.SendMessage<string>(text);
+            base.Send(text);
+        }
+
+        protected override void RegisterMessageHandlers()
+        {
+            RegisterMessageHandler<string>((envelope) => OnStringReceived(envelope));
         }
     }
 }

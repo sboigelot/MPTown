@@ -24,7 +24,8 @@ namespace Assets.Scripts.Network
 
         private readonly Dictionary<Guid, List<NetworkBusEnvelope>> subBox = new Dictionary<Guid, List<NetworkBusEnvelope>>();
 
-        public Action<NetworkBusEnvelope> OnMessageReceived;
+        //public Action<NetworkBusEnvelope> OnMessageReceived;
+        public List<NetworkBusUser> NetworkBusUsers = new List<NetworkBusUser>();
 
         public static bool IsServer
         {
@@ -51,11 +52,15 @@ namespace Assets.Scripts.Network
                 Dispatch(outbox.Dequeue());
             }
 
-            if (OnMessageReceived != null)
+            if (NetworkBusUsers.Any())
             {
                 while (inbox.Count != 0)
                 {
-                    OnMessageReceived(inbox.Dequeue());
+                    var msg = inbox.Dequeue();
+                    foreach (var networkBusUser in NetworkBusUsers)
+                    {
+                        networkBusUser.OnMessageReceived(msg);
+                    }
                 }
             }
         }

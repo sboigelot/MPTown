@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
 using Assets.Scripts.Data;
+using Assets.Scripts.Data.Messages;
+using Assets.Scripts.Helpers;
 using Assets.Scripts.McChunk;
+using Assets.Scripts.Network;
 using UnityEngine;
 
 namespace Assets.Scripts.Controllers
@@ -9,7 +12,7 @@ namespace Assets.Scripts.Controllers
     [RequireComponent(typeof(MeshFilter))]
     [RequireComponent(typeof(MeshCollider))]
     [RequireComponent(typeof(Rigidbody))]
-    public class ChunkController : MonoBehaviour
+    public class ChunkController : NetworkBusUser
     {
         public ChunkData ChunkData;
         public Vector2 TextureBlockSize;
@@ -26,8 +29,9 @@ namespace Assets.Scripts.Controllers
         private Texture textureAtlas;
         private Vector3 atlasSize;
         
-        public void Start()
+        public override void Start()
         {
+            base.Start();
             textureAtlas = transform.GetComponent<MeshRenderer>().material.mainTexture;
             atlasSize = new Vector2(textureAtlas.width / TextureBlockSize.x, textureAtlas.height / TextureBlockSize.y);
             chunkMesh = GetComponent<MeshFilter>().mesh;
@@ -236,6 +240,40 @@ namespace Assets.Scripts.Controllers
             chunkMesh.RecalculateNormals();
 
             GetComponent<MeshCollider>().sharedMesh = chunkMesh;
+        }
+
+        public void SetBlock(RVector3 buildPosCube, ushort blocktype)
+        {
+            if (buildPosCube.x < 0 || buildPosCube.y < 0 || buildPosCube.z < 0 || buildPosCube.x >= Size.x ||
+                buildPosCube.y >= Size.y || buildPosCube.z >= Size.z)
+            {
+                return;
+            }
+
+            Send(new UpdateBlockMessage
+            {
+                ChunkPosition = Position,
+                BlockPosition = buildPosCube,
+                BlockType = blocktype
+            });
+        }
+
+        protected override void RegisterMessageHandlers()
+        {
+            RegisterMessageHandler<UpdateBlockMessage>(OnUpdateBlock);
+        }
+
+        private void OnUpdateBlock(NetworkBusEnvelope envelope)
+        {
+            var updateBlockMessage = BinarySerializationHelper.Deserialize<UpdateBlockMessage>(envelope.Payload);
+            if(updateBlockMessage.ChunkPosition.x != Position.x ||
+                updateBlockMessage.ChunkPosition.y != Position.y ||
+                updateBlockMessage.ChunkPosition.z != Position.z)
+                return;
+
+            var buildPosCube = updateBlockMessage.BlockPosition;
+            ChunkData.Blocks[buildPosCube.x, buildPosCube.y, buildPosCube.z] = updateBlockMessage.BlockType;
+            UpdateChunk();
         }
     }
 }

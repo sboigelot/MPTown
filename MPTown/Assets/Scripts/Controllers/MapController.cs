@@ -14,6 +14,7 @@ namespace Assets.Scripts.Controllers
         public Vector3 MapSize = new Vector3(2, 1, 2);
         public float BlockSize = 1f;
         public Material ChunckMaterial;
+        public GameObject Highlighter;
 
         private MapData mapData;
         public MapData MapData
@@ -87,16 +88,23 @@ namespace Assets.Scripts.Controllers
 
         public void Update()
         {
-            if (Input.GetMouseButtonDown(0))
-            {
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                RaycastHit hit;
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
                 
-                if (Physics.Raycast(ray, out hit, 500))
+            if (Physics.Raycast(ray, out hit, 500))
+            {
+                if (hit.rigidbody != null)
                 {
-                    if (hit.rigidbody != null)
+                    var hitPos = hit.point;
+
+                    if (Highlighter != null)
                     {
-                        var hitPos = hit.point;
+                        var hitPosCube = new RVector3(hitPos);
+                        Highlighter.transform.position = hitPosCube + new Vector3(BlockSize / 2, BlockSize / 2, BlockSize / 2);
+                    }
+
+                    if (Input.GetMouseButtonDown(0))
+                    {
                         ClickChunck(hit.collider.gameObject, hitPos);
                     }
                 }
@@ -105,23 +113,16 @@ namespace Assets.Scripts.Controllers
 
         private void ClickChunck(GameObject chunkGameObject, Vector3 hitPos)
         {
-            //var cube = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            //cube.SetActive(true);
-            //cube.transform.SetParent(this.transform);
-
             var chunkController = chunkGameObject.GetComponent<ChunkController>();
             var chunk = chunkController.ChunkData;
 
             var hitPos2 = hitPos - ChunkToWorldPosition(chunk.MapPosition);
             var hitPosCube = new RVector3(hitPos2);
 
-            Debug.LogFormat("Hit chunk {0} at cube {1}", chunk.MapPosition, hitPosCube);
-
-            //cube.transform.position = hitPosCube;
-
+            //Debug.LogFormat("Hit chunk {0} at cube {1}", chunk.MapPosition, hitPosCube);
+            
             var buildPosCube = new RVector3(hitPosCube.x, hitPosCube.y, hitPosCube.z);
-            chunk.Blocks[buildPosCube.x, buildPosCube.y, buildPosCube.z] = 1;
-            chunkController.UpdateChunk();
+            chunkController.SetBlock(buildPosCube, 1);
         }
         
         private Vector3 ChunkToWorldPosition(Vector3 position)

@@ -16,7 +16,7 @@ namespace Assets.Scripts.Network
             messageHandlers[typeof(T).Name] = handler;
         }
 
-        public void Start()
+        public virtual void Start()
         {
             RegisterMessageHandlers();
             if (NetworkBus.LocalBus != null)
@@ -32,16 +32,16 @@ namespace Assets.Scripts.Network
         private void OnLocalBusFound(NetworkBus bus)
         {
             NetworkBus = bus;
-            NetworkBus.OnMessageReceived += OnMessageReceived;
+            NetworkBus.NetworkBusUsers.Add(this);
         }
 
         protected abstract void RegisterMessageHandlers();
 
-        public void OnDestroy()
+        public virtual void OnDestroy()
         {
             if (NetworkBus != null)
             {
-                NetworkBus.OnMessageReceived -= OnMessageReceived;
+                NetworkBus.NetworkBusUsers.Remove(this);
             }
         }
 
@@ -66,7 +66,7 @@ namespace Assets.Scripts.Network
             NetworkBus.LocalBus.SendMessage(data);
         }
 
-        private void OnMessageReceived(NetworkBusEnvelope envelope)
+        public void OnMessageReceived(NetworkBusEnvelope envelope)
         {
             if (messageHandlers.ContainsKey(envelope.PayloadType))
             {
