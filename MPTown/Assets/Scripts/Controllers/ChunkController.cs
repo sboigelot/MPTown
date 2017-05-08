@@ -7,6 +7,8 @@ namespace Assets.Scripts.Controllers
 {
     [RequireComponent(typeof(MeshRenderer))]
     [RequireComponent(typeof(MeshFilter))]
+    [RequireComponent(typeof(MeshCollider))]
+    [RequireComponent(typeof(Rigidbody))]
     public class ChunkController : MonoBehaviour
     {
         public ChunkData ChunkData;
@@ -232,6 +234,8 @@ namespace Assets.Scripts.Controllers
             chunkMesh.triangles = triangles.ToArray();
             chunkMesh.uv = uvs.ToArray();
             chunkMesh.RecalculateNormals();
+
+            GetComponent<MeshCollider>().sharedMesh = chunkMesh;
         }
     }
 }

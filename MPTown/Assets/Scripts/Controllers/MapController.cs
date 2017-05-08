@@ -77,8 +77,53 @@ namespace Assets.Scripts.Controllers
             chunckController.ChunkData = chunk;
             chunckController.Size = new RVector3(ChunckSize);
             chunckController.Position = new RVector3(position);
+
+            var rigidBody = chunkGameObject.GetComponent<Rigidbody>() ?? chunkGameObject.AddComponent<Rigidbody>();
+            rigidBody.useGravity = false;
+            rigidBody.isKinematic = true;
+
+            var meshCollider = chunkGameObject.AddComponent<MeshCollider>();
         }
 
+        public void Update()
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                RaycastHit hit;
+                
+                if (Physics.Raycast(ray, out hit, 500))
+                {
+                    if (hit.rigidbody != null)
+                    {
+                        var hitPos = hit.point;
+                        ClickChunck(hit.collider.gameObject, hitPos);
+                    }
+                }
+            }
+        }
+
+        private void ClickChunck(GameObject chunkGameObject, Vector3 hitPos)
+        {
+            //var cube = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            //cube.SetActive(true);
+            //cube.transform.SetParent(this.transform);
+
+            var chunkController = chunkGameObject.GetComponent<ChunkController>();
+            var chunk = chunkController.ChunkData;
+
+            var hitPos2 = hitPos - ChunkToWorldPosition(chunk.MapPosition);
+            var hitPosCube = new RVector3(hitPos2);
+
+            Debug.LogFormat("Hit chunk {0} at cube {1}", chunk.MapPosition, hitPosCube);
+
+            //cube.transform.position = hitPosCube;
+
+            var buildPosCube = new RVector3(hitPosCube.x, hitPosCube.y, hitPosCube.z);
+            chunk.Blocks[buildPosCube.x, buildPosCube.y, buildPosCube.z] = 1;
+            chunkController.UpdateChunk();
+        }
+        
         private Vector3 ChunkToWorldPosition(Vector3 position)
         {
             return new Vector3(

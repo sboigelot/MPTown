@@ -27,7 +27,8 @@ namespace Assets.Scripts.Data
                 {
                     map.Chunks[x, y, z] = new ChunkData
                     {
-                        Blocks = new ushort[(int)ChunckSize.x, (int)ChunckSize.y, (int)ChunckSize.z]
+                        Blocks = new ushort[(int) ChunckSize.x, (int) ChunckSize.y, (int) ChunckSize.z],
+                        MapPosition = new RVector3(x, y, z)
                     };
 
                     var chunk = map.Chunks[x, y, z];
