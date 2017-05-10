@@ -10,15 +10,9 @@ namespace Assets.Scripts.Controllers
     [RequireComponent(typeof(NetworkBus))]
     class PlayerChatcontrollerUsingNetworkBus : NetworkBusUser
     {
-        NetworkBus networkBus;
-        
-        private void OnStringReceived(NetworkBusEnvelope envelope)
+        private void OnStringReceived(string msg)
         {
-            if (envelope.PayloadType == "String")
-            {
-                var msg = envelope.Open<string>();
-                contents.Add(msg);
-            }
+            contents.Add(msg);
         }
 
         public List<string> contents = new List<string>();
@@ -48,7 +42,7 @@ namespace Assets.Scripts.Controllers
 
         protected override void RegisterMessageHandlers()
         {
-            RegisterMessageHandler<string>((envelope) => OnStringReceived(envelope));
+            RegisterMessageHandler<string>((payload) => OnStringReceived((string)payload));
         }
     }
 }

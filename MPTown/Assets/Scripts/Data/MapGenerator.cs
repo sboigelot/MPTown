@@ -1,5 +1,4 @@
 using Assets.Scripts.Helpers;
-using Assets.Scripts.McChunk;
 using UnityEngine;
 
 namespace Assets.Scripts.Data
@@ -10,7 +9,7 @@ namespace Assets.Scripts.Data
         {
             float[,] chunkHeights = Noise.Generate(
                 (int)((MapSize.x + 1) * ChunckSize.x), 
-                (int)((MapSize.y + 1) * ChunckSize.y), 
+                (int)((MapSize.z + 1) * ChunckSize.z), 
                 seed, 
                 intensity);
 
@@ -44,8 +43,9 @@ namespace Assets.Scripts.Data
                                 cy > chunkHeights[
                                     cx + x * (int) ChunckSize.x,
                                     cz + z * (int) ChunckSize.z]
-                                    ? (ushort)0
-                                    : (ushort)Random.Range(1, 4);
+                                    ? (ushort) 0
+                                    : (ushort) cy;
+                            //: (ushort) Random.Range(1, 8);
                         });
                 });
 

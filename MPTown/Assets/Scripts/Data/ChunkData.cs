@@ -1,6 +1,4 @@
 ﻿using System;
-using Assets.Scripts.McChunk;
-using UnityEngine;
 
 namespace Assets.Scripts.Data
 {

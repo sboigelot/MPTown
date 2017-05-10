@@ -87,26 +87,29 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\Controllers\ChunkController.cs" />
+    <Compile Include="Assets\Scripts\Controllers\ClientSideTraveller.cs" />
     <Compile Include="Assets\Scripts\Controllers\MapController.cs" />
     <Compile Include="Assets\Scripts\Controllers\PlayerChatController.cs" />
     <Compile Include="Assets\Scripts\Controllers\PlayerChatcontrollerUsingNetworkBus.cs" />
+    <Compile Include="Assets\Scripts\Controllers\RobotController.cs" />
     <Compile Include="Assets\Scripts\Controllers\SimpleRtsCam.cs" />
     <Compile Include="Assets\Scripts\Data\ChunkData.cs" />
     <Compile Include="Assets\Scripts\Data\InventoryData.cs" />
     <Compile Include="Assets\Scripts\Data\MapData.cs" />
     <Compile Include="Assets\Scripts\Data\MapGenerator.cs" />
     <Compile Include="Assets\Scripts\Data\Messages\UpdateBlockMessage.cs" />
+    <Compile Include="Assets\Scripts\Data\RobotData.cs" />
+    <Compile Include="Assets\Scripts\Data\RobotTaskData.cs" />
     <Compile Include="Assets\Scripts\Helpers\BinarySerializationHelper.cs" />
     <Compile Include="Assets\Scripts\Helpers\ObjectExtensions.cs" />
     <Compile Include="Assets\Scripts\Helpers\TransformExtensions.cs" />
-    <Compile Include="Assets\Scripts\McChunk\Block.cs" />
-    <Compile Include="Assets\Scripts\McChunk\BlockFace.cs" />
-    <Compile Include="Assets\Scripts\McChunk\Chunk.cs" />
-    <Compile Include="Assets\Scripts\McChunk\Noise.cs" />
-    <Compile Include="Assets\Scripts\McChunk\RVector3.cs" />
+    <Compile Include="Assets\Scripts\Data\BlockFace.cs" />
+    <Compile Include="Assets\Scripts\Helpers\Noise.cs" />
+    <Compile Include="Assets\Scripts\Data\RVector3.cs" />
     <Compile Include="Assets\Scripts\Network\NetworkBus.cs" />
     <Compile Include="Assets\Scripts\Network\NetworkBusEnvelope.cs" />
     <Compile Include="Assets\Scripts\Network\NetworkBusUser.cs" />
+    <Compile Include="Assets\Scripts\Network\QueuedNetworkBusEnvelope.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateTargetFrameworkMonikerAttribute" />

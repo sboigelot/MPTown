@@ -1,7 +1,6 @@
 ﻿using System;
 using Assets.Scripts.Data;
 using Assets.Scripts.Helpers;
-using Assets.Scripts.McChunk;
 using Assets.Scripts.Network;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -15,6 +14,9 @@ namespace Assets.Scripts.Controllers
         public float BlockSize = 1f;
         public Material ChunckMaterial;
         public GameObject Highlighter;
+        public Vector2 TextureBlockSize = new Vector2(128, 128);
+
+        public ushort EditBlockIndex = 10;
 
         private MapData mapData;
         public MapData MapData
@@ -74,10 +76,11 @@ namespace Assets.Scripts.Controllers
             var meshRenderer = chunkGameObject.AddComponent<MeshRenderer>();
             meshRenderer.sharedMaterial = ChunckMaterial;
             var chunckController = chunkGameObject.AddComponent<ChunkController>();
-            chunckController.TextureBlockSize = new Vector2(128, 128);
             chunckController.ChunkData = chunk;
             chunckController.Size = new RVector3(ChunckSize);
             chunckController.Position = new RVector3(position);
+            chunckController.TextureBlockSize = TextureBlockSize;
+            chunckController.BlockSize = BlockSize;
 
             var rigidBody = chunkGameObject.GetComponent<Rigidbody>() ?? chunkGameObject.AddComponent<Rigidbody>();
             rigidBody.useGravity = false;
@@ -99,30 +102,49 @@ namespace Assets.Scripts.Controllers
 
                     if (Highlighter != null)
                     {
+                        //var hitPosCube = new RVector3(hitPos);
+                        //Highlighter.transform.position = hitPosCube;// + new Vector3(BlockSize / 2, BlockSize / 2, BlockSize / 2);
+
                         var hitPosCube = new RVector3(hitPos);
-                        Highlighter.transform.position = hitPosCube + new Vector3(BlockSize / 2, BlockSize / 2, BlockSize / 2);
+                        var variation = new Vector3(
+                            hitPos.x % BlockSize,
+                            hitPos.y % BlockSize,
+                            hitPos.z % BlockSize);
+                        var bs = BlockSize;
+                        var hs = bs / 2;
+                        Func<float, float> align = (float v) => variation.x < 0 ? hs : -hs;
+                        var vx = align(variation.x);
+                        var vy = align(variation.y);
+                        var vz = align(variation.z);
+                        Highlighter.transform.position = hitPosCube + new Vector3(vx, -vy, vz);
+
                     }
 
                     if (Input.GetMouseButtonDown(0))
                     {
-                        ClickChunck(hit.collider.gameObject, hitPos);
+                        ClickChunck(hit.collider.gameObject, hitPos, EditBlockIndex);
+                    }
+
+                    if (Input.GetMouseButtonDown(1))
+                    {
+                        ClickChunck(hit.collider.gameObject, hitPos, 0);
                     }
                 }
             }
         }
-
-        private void ClickChunck(GameObject chunkGameObject, Vector3 hitPos)
+        
+        private void ClickChunck(GameObject chunkGameObject, Vector3 hitPos, ushort editBlockIndex)
         {
             var chunkController = chunkGameObject.GetComponent<ChunkController>();
             var chunk = chunkController.ChunkData;
 
-            var hitPos2 = hitPos - ChunkToWorldPosition(chunk.MapPosition);
-            var hitPosCube = new RVector3(hitPos2);
+            var chunkRelativeHitPos = hitPos - ChunkToWorldPosition(chunk.MapPosition);
+            var hitPosCube = new RVector3(chunkRelativeHitPos);
 
-            //Debug.LogFormat("Hit chunk {0} at cube {1}", chunk.MapPosition, hitPosCube);
+            Debug.LogFormat("Hit chunk {0} at cube {1}", chunk.MapPosition, hitPosCube);
             
             var buildPosCube = new RVector3(hitPosCube.x, hitPosCube.y, hitPosCube.z);
-            chunkController.SetBlock(buildPosCube, 1);
+            chunkController.SetBlock(buildPosCube, editBlockIndex);
         }
         
         private Vector3 ChunkToWorldPosition(Vector3 position)
@@ -159,11 +181,11 @@ namespace Assets.Scripts.Controllers
             RegisterMessageHandler<MapData>(OnMapDataReceived);
         }
 
-        private void OnMapDataReceived(NetworkBusEnvelope envelope)
+        private void OnMapDataReceived(object payload)
         {
             if (!NetworkBus.IsServer)
             {
-                MapData = envelope.Open<MapData>();
+                MapData = payload as MapData;
             }
         }
     }

@@ -1,17 +1,19 @@
 using System;
 using System.Collections.Generic;
+using Assets.Scripts.Data.Messages;
+using Assets.Scripts.Helpers;
 using UnityEngine;
 
 namespace Assets.Scripts.Network
 {
     public abstract class NetworkBusUser : MonoBehaviour
     {
-        private readonly Dictionary<string, Action<NetworkBusEnvelope>> messageHandlers
-            = new Dictionary<string, Action<NetworkBusEnvelope>>();
+        private readonly Dictionary<string, Action<object>> messageHandlers
+            = new Dictionary<string, Action<object>>();
 
         protected NetworkBus NetworkBus;
 
-        public void RegisterMessageHandler<T>(Action<NetworkBusEnvelope> handler)
+        public void RegisterMessageHandler<T>(Action<object> handler)
         {
             messageHandlers[typeof(T).Name] = handler;
         }
@@ -70,7 +72,8 @@ namespace Assets.Scripts.Network
         {
             if (messageHandlers.ContainsKey(envelope.PayloadType))
             {
-                messageHandlers[envelope.PayloadType](envelope);
+                var payLoad = envelope.Open<object>();
+                messageHandlers[envelope.PayloadType](payLoad);
             }
             else
             {

@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Assets.Scripts.McChunk
+namespace Assets.Scripts.Data
 {
     [Serializable]
     public class RVector3

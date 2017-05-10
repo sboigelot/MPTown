@@ -20,11 +20,10 @@ namespace Assets.Scripts.Network
 
         private readonly Queue<NetworkBusEnvelope> inbox = new Queue<NetworkBusEnvelope>();
 
-        private readonly Queue<NetworkBusEnvelope> outbox = new Queue<NetworkBusEnvelope>();
+        private readonly Queue<OutgoingNetworkBusEnvelope> outbox = new Queue<OutgoingNetworkBusEnvelope>();
 
         private readonly Dictionary<Guid, List<NetworkBusEnvelope>> subBox = new Dictionary<Guid, List<NetworkBusEnvelope>>();
-
-        //public Action<NetworkBusEnvelope> OnMessageReceived;
+        
         public List<NetworkBusUser> NetworkBusUsers = new List<NetworkBusUser>();
 
         public static bool IsServer
@@ -81,11 +80,23 @@ namespace Assets.Scripts.Network
 
         public void SendMessage<T>(T message)
         {
-            outbox.Enqueue(new NetworkBusEnvelope(message));
+            SendMessage(message, false);
         }
 
-        private void Dispatch(NetworkBusEnvelope message)
+        public void SendMessage<T>(T message, bool sendToSelf)
         {
+            outbox.Enqueue(
+                new OutgoingNetworkBusEnvelope
+                {
+                    Envelope = new NetworkBusEnvelope(message),
+                    SendToSelf = sendToSelf
+                });
+        }
+
+        private void Dispatch(OutgoingNetworkBusEnvelope outgoingNetworkBusEnvelope)
+        {
+            var message = outgoingNetworkBusEnvelope.Envelope;
+
             if (!isLocalPlayer)
                 return;
 
@@ -106,7 +117,12 @@ namespace Assets.Scripts.Network
                         groupSize,
                         payload);
                     
-                    outbox.Enqueue(subEnveloppe);
+                    outbox.Enqueue(
+                        new OutgoingNetworkBusEnvelope
+                        {
+                            Envelope = subEnveloppe,
+                            SendToSelf = outgoingNetworkBusEnvelope.SendToSelf
+                        });
                 }
 
                 return;
@@ -114,7 +130,7 @@ namespace Assets.Scripts.Network
             
             if (isServer)
             {
-                Broadcast(data);
+                Broadcast(data, outgoingNetworkBusEnvelope.SendToSelf);
             }
             else
             {
@@ -125,13 +141,19 @@ namespace Assets.Scripts.Network
         [Command]
         public void CmdSendToServer(byte[] data)
         {
-            Broadcast(data);
+            Broadcast(data, false);
         }
 
-        public void Broadcast(byte[] data)
+        public void Broadcast(byte[] data, bool sendToSelf)
         {
             foreach (var client in NetworkServer.connections)
             {
+                //TODO implement filter on send
+                //if (!sendToSelf && client.hostId == LocalIdentity.playerControllerId)
+                //{
+                //    continue;
+                //}
+
                 var player = client.playerControllers[0].gameObject;
                 var chatController = player.GetComponent<NetworkBus>();
                 chatController.RpcSendToClients(data);

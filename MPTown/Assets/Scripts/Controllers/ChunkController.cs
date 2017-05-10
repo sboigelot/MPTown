@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using Assets.Scripts.Data;
 using Assets.Scripts.Data.Messages;
-using Assets.Scripts.Helpers;
-using Assets.Scripts.McChunk;
 using Assets.Scripts.Network;
 using UnityEngine;
 
@@ -21,6 +19,8 @@ namespace Assets.Scripts.Controllers
         public RVector3 Position;
         public RVector3 Size;
 
+        public float BlockSize;
+
         private List<int> triangles = new List<int>();
         private List<Vector2> uvs = new List<Vector2>();
         private List<Vector3> verticies = new List<Vector3>();
@@ -28,12 +28,14 @@ namespace Assets.Scripts.Controllers
         private int verticiesIndex;
         private Texture textureAtlas;
         private Vector3 atlasSize;
-        
+        private Vector2 textureInterval;
+
         public override void Start()
         {
             base.Start();
             textureAtlas = transform.GetComponent<MeshRenderer>().material.mainTexture;
             atlasSize = new Vector2(textureAtlas.width / TextureBlockSize.x, textureAtlas.height / TextureBlockSize.y);
+            textureInterval = new Vector2(1 / atlasSize.x, 1 / atlasSize.y);
             chunkMesh = GetComponent<MeshFilter>().mesh;
             UpdateChunk();
         }
@@ -46,83 +48,81 @@ namespace Assets.Scripts.Controllers
 
             chunkMesh.Clear();
 
-            float blockSize = 1;
-
             var chunkBlocks = ChunkData.Blocks;
 
-            for (var y = 0; y < Size.y; y++)
+            for (var yi = 0; yi < Size.y; yi++)
             {
-                for (var x = 0; x < Size.x; x++)
+                for (var xi = 0; xi < Size.x; xi++)
                 {
-                    for (var z = 0; z < Size.z; z++)
+                    for (var zi = 0; zi < Size.z; zi++)
                     {
-                        if (chunkBlocks[x, y, z] != 0)
+                        int blockType = chunkBlocks[xi, yi, zi];
+                        if (blockType != 0)
                         {
-                            if (CheckSides(new RVector3(x, y, z), BlockFace.Top))
+                            var blockIndex = new RVector3(xi, yi, zi);
+
+                            var x = (float)xi * BlockSize;
+                            var y = (float)yi * BlockSize;
+                            var z = (float)zi * BlockSize;
+
+                            if (CheckSides(blockIndex, BlockFace.Top))
                             {
                                 verticiesIndex = verticies.Count;
-
-                                verticies.Add(new Vector3(x, y + blockSize, z));
-                                verticies.Add(new Vector3(x, y + blockSize, z + blockSize));
-                                verticies.Add(new Vector3(x + blockSize, y + blockSize, z + blockSize));
-                                verticies.Add(new Vector3(x + blockSize, y + blockSize, z));
-                                UpdateChunkUV(chunkBlocks[x, y, z]);
+                                verticies.Add(new Vector3(x, y + BlockSize, z));
+                                verticies.Add(new Vector3(x, y + BlockSize, z + BlockSize));
+                                verticies.Add(new Vector3(x + BlockSize, y + BlockSize, z + BlockSize));
+                                verticies.Add(new Vector3(x + BlockSize, y + BlockSize, z));
+                                UpdateChunkUV(blockType);
                             }
 
-                            if (CheckSides(new RVector3(x, y, z), BlockFace.Bottom))
+                            if (CheckSides(blockIndex, BlockFace.Bottom))
                             {
                                 verticiesIndex = verticies.Count;
-
                                 verticies.Add(new Vector3(x, y, z));
-                                verticies.Add(new Vector3(x + blockSize, y, z));
-                                verticies.Add(new Vector3(x + blockSize, y, z + blockSize));
-                                verticies.Add(new Vector3(x, y, z + blockSize));
-                                UpdateChunkUV(chunkBlocks[x, y, z]);
+                                verticies.Add(new Vector3(x + BlockSize, y, z));
+                                verticies.Add(new Vector3(x + BlockSize, y, z + BlockSize));
+                                verticies.Add(new Vector3(x, y, z + BlockSize));
+                                UpdateChunkUV(blockType);
                             }
 
-                            if (CheckSides(new RVector3(x, y, z), BlockFace.Right))
+                            if (CheckSides(blockIndex, BlockFace.Right))
                             {
                                 verticiesIndex = verticies.Count;
-
-
-                                verticies.Add(new Vector3(x + blockSize, y, z));
-                                verticies.Add(new Vector3(x + blockSize, y + blockSize, z));
-                                verticies.Add(new Vector3(x + blockSize, y + blockSize, z + blockSize));
-                                verticies.Add(new Vector3(x + blockSize, y, z + blockSize));
-                                UpdateChunkUV(chunkBlocks[x, y, z]);
+                                verticies.Add(new Vector3(x + BlockSize, y, z));
+                                verticies.Add(new Vector3(x + BlockSize, y + BlockSize, z));
+                                verticies.Add(new Vector3(x + BlockSize, y + BlockSize, z + BlockSize));
+                                verticies.Add(new Vector3(x + BlockSize, y, z + BlockSize));
+                                UpdateChunkUV(blockType);
                             }
 
-                            if (CheckSides(new RVector3(x, y, z), BlockFace.Left))
+                            if (CheckSides(blockIndex, BlockFace.Left))
                             {
                                 verticiesIndex = verticies.Count;
-
-                                verticies.Add(new Vector3(x, y, z + blockSize));
-                                verticies.Add(new Vector3(x, y + blockSize, z + blockSize));
-                                verticies.Add(new Vector3(x, y + blockSize, z));
+                                verticies.Add(new Vector3(x, y, z + BlockSize));
+                                verticies.Add(new Vector3(x, y + BlockSize, z + BlockSize));
+                                verticies.Add(new Vector3(x, y + BlockSize, z));
                                 verticies.Add(new Vector3(x, y, z));
-                                UpdateChunkUV(chunkBlocks[x, y, z]);
+                                UpdateChunkUV(blockType);
                             }
 
-                            if (CheckSides(new RVector3(x, y, z), BlockFace.Far))
+                            if (CheckSides(blockIndex, BlockFace.Far))
                             {
                                 verticiesIndex = verticies.Count;
-
-                                verticies.Add(new Vector3(x, y, z + blockSize));
-                                verticies.Add(new Vector3(x + blockSize, y, z + blockSize));
-                                verticies.Add(new Vector3(x + blockSize, y + blockSize, z + blockSize));
-                                verticies.Add(new Vector3(x, y + blockSize, z + blockSize));
-                                UpdateChunkUV(chunkBlocks[x, y, z]);
+                                verticies.Add(new Vector3(x, y, z + BlockSize));
+                                verticies.Add(new Vector3(x + BlockSize, y, z + BlockSize));
+                                verticies.Add(new Vector3(x + BlockSize, y + BlockSize, z + BlockSize));
+                                verticies.Add(new Vector3(x, y + BlockSize, z + BlockSize));
+                                UpdateChunkUV(blockType);
                             }
 
-                            if (CheckSides(new RVector3(x, y, z), BlockFace.Near))
+                            if (CheckSides(blockIndex, BlockFace.Near))
                             {
                                 verticiesIndex = verticies.Count;
-
                                 verticies.Add(new Vector3(x, y, z));
-                                verticies.Add(new Vector3(x, y + blockSize, z));
-                                verticies.Add(new Vector3(x + blockSize, y + blockSize, z));
-                                verticies.Add(new Vector3(x + blockSize, y, z));
-                                UpdateChunkUV(chunkBlocks[x, y, z]);
+                                verticies.Add(new Vector3(x, y + BlockSize, z));
+                                verticies.Add(new Vector3(x + BlockSize, y + BlockSize, z));
+                                verticies.Add(new Vector3(x + BlockSize, y, z));
+                                UpdateChunkUV(blockType);
                             }
                         }
                     }
@@ -221,10 +221,10 @@ namespace Assets.Scripts.Controllers
             triangles.Add(verticiesIndex + 3);
             triangles.Add(verticiesIndex);
 
-            var textureInterval = new Vector2(1 / atlasSize.x, 1 / atlasSize.y);
 
-            var textureID = new Vector2(textureInterval.x * (blockID % atlasSize.x),
-                textureInterval.y * Mathf.FloorToInt(blockID / atlasSize.y));
+            var textureID = new Vector2(
+                textureInterval.x * (blockID % atlasSize.x),
+                -textureInterval.y * Mathf.FloorToInt(blockID / atlasSize.y));
 
             uvs.Add(new Vector2(textureID.x, textureID.y - textureInterval.y));
             uvs.Add(new Vector2(textureID.x + textureInterval.x, textureID.y - textureInterval.y));
@@ -263,10 +263,11 @@ namespace Assets.Scripts.Controllers
             RegisterMessageHandler<UpdateBlockMessage>(OnUpdateBlock);
         }
 
-        private void OnUpdateBlock(NetworkBusEnvelope envelope)
+        private void OnUpdateBlock(object payload)
         {
-            var updateBlockMessage = BinarySerializationHelper.Deserialize<UpdateBlockMessage>(envelope.Payload);
-            if(updateBlockMessage.ChunkPosition.x != Position.x ||
+            var updateBlockMessage = (UpdateBlockMessage) payload;
+
+            if (updateBlockMessage.ChunkPosition.x != Position.x ||
                 updateBlockMessage.ChunkPosition.y != Position.y ||
                 updateBlockMessage.ChunkPosition.z != Position.z)
                 return;

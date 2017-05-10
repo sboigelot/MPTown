@@ -1,4 +1,4 @@
-namespace Assets.Scripts.McChunk
+namespace Assets.Scripts.Data
 {
     public enum BlockFace
     {

@@ -11,7 +11,7 @@ namespace Assets.Scripts.Network
         public Guid GroupId;
         public int Index;
         public int GroupTotal;
-
+        
         public NetworkBusEnvelope(object payload)
         {
             Payload = BinarySerializationHelper.Serialize(payload);
