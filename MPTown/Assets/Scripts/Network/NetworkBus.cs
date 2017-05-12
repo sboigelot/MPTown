@@ -28,7 +28,7 @@ namespace Assets.Scripts.Network
 
         public static bool IsServer
         {
-            get { return LocalIdentity.isServer; }
+            get { return LocalIdentity != null && LocalIdentity.isServer; }
         }
 
         public override void OnStartLocalPlayer()
@@ -148,13 +148,21 @@ namespace Assets.Scripts.Network
         {
             foreach (var client in NetworkServer.connections)
             {
-                //TODO implement filter on send
-                //if (!sendToSelf && client.hostId == LocalIdentity.playerControllerId)
-                //{
-                //    continue;
-                //}
+                var playerController = client.playerControllers[0];
+                if (playerController.playerControllerId == LocalIdentity.playerControllerId)
+                {
+                    if (!sendToSelf)
+                    {
+                        continue;
+                    }
 
-                var player = client.playerControllers[0].gameObject;
+                    //TODO possible bypass to not sent to self through socket
+                    //var message = BinarySerializationHelper.Deserialize<NetworkBusEnvelope>(data);
+                    //inbox.Enqueue(message);
+                    //continue;
+                }
+
+                var player = playerController.gameObject;
                 var chatController = player.GetComponent<NetworkBus>();
                 chatController.RpcSendToClients(data);
             }

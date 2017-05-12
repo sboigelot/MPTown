@@ -255,7 +255,8 @@ namespace Assets.Scripts.Controllers
                 ChunkPosition = Position,
                 BlockPosition = buildPosCube,
                 BlockType = blocktype
-            });
+            },
+            true);
         }
 
         protected override void RegisterMessageHandlers()

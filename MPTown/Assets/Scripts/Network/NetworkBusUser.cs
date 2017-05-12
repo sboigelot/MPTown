@@ -47,25 +47,25 @@ namespace Assets.Scripts.Network
             }
         }
 
-        protected void SendIfServer<T>(T data)
+        protected void SendIfServer<T>(T data, bool sendToSelf = false)
         {
             if (NetworkBus.IsServer)
             {
-                NetworkBus.LocalBus.SendMessage(data);
+                NetworkBus.LocalBus.SendMessage(data, sendToSelf);
             }
         }
 
-        protected void SendIfClient<T>(T data)
+        protected void SendIfClient<T>(T data, bool sendToSelf = false)
         {
             if (!NetworkBus.IsServer)
             {
-                NetworkBus.LocalBus.SendMessage(data);
+                NetworkBus.LocalBus.SendMessage(data, sendToSelf);
             }
         }
 
-        protected void Send<T>(T data)
+        protected void Send<T>(T data, bool sendToSelf = false)
         {
-            NetworkBus.LocalBus.SendMessage(data);
+            NetworkBus.LocalBus.SendMessage(data, sendToSelf);
         }
 
         public void OnMessageReceived(NetworkBusEnvelope envelope)
