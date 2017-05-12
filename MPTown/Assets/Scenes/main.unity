@@ -150,7 +150,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   BlockSize: 1
   ChunckMaterial: {fileID: 2100000, guid: 3ff27c12bd3b8bc4baff2bf40240805b, type: 2}
-  ChunckSize: {x: 10, y: 10, z: 10}
+  ChunckSize: {x: 16, y: 20, z: 16}
   EditBlockIndex: 10
   Highlighter: {fileID: 240221366}
   MapSize: {x: 8, y: 1, z: 8}
@@ -168,6 +168,7 @@ GameObject:
   - component: {fileID: 15886251}
   - component: {fileID: 15886250}
   - component: {fileID: 15886255}
+  - component: {fileID: 15886256}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -269,6 +270,18 @@ MonoBehaviour:
   boundingBox:
     m_Center: {x: 0, y: 0, z: 0}
     m_Extent: {x: 250, y: 250, z: 250}
+--- !u!114 &15886256
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 15886249}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff26db721962cdf4a8edcdfa9a767d2a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  profile: {fileID: 11400000, guid: 2776e4a303efdf54999210cd7fc04fbe, type: 2}
 --- !u!1 &240221366
 GameObject:
   m_ObjectHideFlags: 0
@@ -457,7 +470,7 @@ MonoBehaviour:
   m_AutoCreatePlayer: 1
   m_PlayerSpawnMethod: 0
   m_OfflineScene: 
-  m_OnlineScene: 
+  m_OnlineScene: main
   m_SpawnPrefabs: []
   m_CustomConfig: 1
   m_MaxConnections: 4
@@ -718,11 +731,11 @@ RectTransform:
   m_Father: {fileID: 1369532003}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 316, y: -278}
+  m_AnchorMin: {x: 1, y: 0}
+  m_AnchorMax: {x: 1, y: 0}
+  m_AnchoredPosition: {x: -5, y: 5}
   m_SizeDelta: {x: 160, y: 30}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_Pivot: {x: 1, y: 0}
 --- !u!114 &1680535725
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -151,10 +151,11 @@ namespace Assets.Scripts.Network
                 var playerController = client.playerControllers[0];
                 if (playerController.playerControllerId == LocalIdentity.playerControllerId)
                 {
-                    if (!sendToSelf)
-                    {
-                        continue;
-                    }
+                    //TODO this doesn't seem to allow network transfert anymore
+                    //if (!sendToSelf)
+                    //{
+                    //    continue;
+                    //}
 
                     //TODO possible bypass to not sent to self through socket
                     //var message = BinarySerializationHelper.Deserialize<NetworkBusEnvelope>(data);

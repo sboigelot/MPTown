@@ -151,7 +151,7 @@ namespace Assets.Scripts.Controllers
             var chunkRelativeWorldPos = cubeWorldPos - chunkController.gameObject.transform.position;
             var cubeChunkIndex = new RVector3(chunkRelativeWorldPos);
 
-            Debug.LogFormat("Hit chunk {2} {0} at cube {1}", chunk.MapPosition, cubeChunkIndex, chunkRelativeWorldPos);
+            //Debug.LogFormat("Hit chunk {2} {0} at cube {1}", chunk.MapPosition, cubeChunkIndex, chunkRelativeWorldPos);
             chunkController.SetBlock(cubeChunkIndex, editBlockIndex);
         }
 

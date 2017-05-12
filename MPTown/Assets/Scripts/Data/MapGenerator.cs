@@ -39,17 +39,35 @@ namespace Assets.Scripts.Data
                         blocks.GetLength(2),
                         (cx, cy, cz) =>
                         {
-                            blocks[cx, cy, cz] =
-                                cy > chunkHeights[
-                                    cx + x * (int) ChunckSize.x,
-                                    cz + z * (int) ChunckSize.z]
-                                    ? (ushort) 0
-                                    : (ushort) cy;
-                            //: (ushort) Random.Range(1, 8);
+                            var h = chunkHeights[cx + x * (int) ChunckSize.x, cz + z * (int) ChunckSize.z];
+                            blocks[cx, cy, cz] = GetBlock(h, cx, cy, cz);
                         });
                 });
 
             return map;
+        }
+
+        private ushort GetBlock(float h, int cx, int cy, int cz)
+        {
+            if (cy > h)
+                return 0;
+
+            if (cy <= 2)
+            {
+                return 1; //stone
+            }
+
+            if (cy <= 4)
+            {
+                return (ushort)Random.Range(5, 7); // dirt
+            }
+
+            if (cy <= 5)
+            {
+                return (ushort)Random.Range(7, 9); // sand
+            }
+
+            return (ushort)Random.Range(3,5); // grass
         }
     }
 }

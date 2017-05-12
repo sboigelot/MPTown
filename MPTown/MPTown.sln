@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2015
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MPTown", "MPTown.csproj", "{4A2AA83A-943E-E9AF-71C8-0FE298AA02A7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MPTown.Editor", "MPTown.Editor.csproj", "{988AC661-0E1C-B3D3-1408-7737CC58EA70}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +15,10 @@ Global
 		{4A2AA83A-943E-E9AF-71C8-0FE298AA02A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4A2AA83A-943E-E9AF-71C8-0FE298AA02A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4A2AA83A-943E-E9AF-71C8-0FE298AA02A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{988AC661-0E1C-B3D3-1408-7737CC58EA70}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{988AC661-0E1C-B3D3-1408-7737CC58EA70}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{988AC661-0E1C-B3D3-1408-7737CC58EA70}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{988AC661-0E1C-B3D3-1408-7737CC58EA70}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

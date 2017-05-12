@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using Assets.Scripts.Data;
 using Assets.Scripts.Data.Messages;
 using Assets.Scripts.Network;
@@ -29,15 +30,36 @@ namespace Assets.Scripts.Controllers
         private Texture textureAtlas;
         private Vector3 atlasSize;
         private Vector2 textureInterval;
+        
+        private bool meshGenerationCompleted = false;
 
         public override void Start()
         {
             base.Start();
             textureAtlas = transform.GetComponent<MeshRenderer>().material.mainTexture;
-            atlasSize = new Vector2(textureAtlas.width / TextureBlockSize.x, textureAtlas.height / TextureBlockSize.y);
+            atlasSize = new Vector2(
+                textureAtlas.width / TextureBlockSize.x, 
+                textureAtlas.height / TextureBlockSize.y);
             textureInterval = new Vector2(1 / atlasSize.x, 1 / atlasSize.y);
             chunkMesh = GetComponent<MeshFilter>().mesh;
-            UpdateChunk();
+            StartUpdateChunck();
+        }
+
+        public void Update()
+        {
+            if (meshGenerationCompleted)
+            {
+                FinalizeChunk();
+                meshGenerationCompleted = false;
+            }
+        }
+
+        public void StartUpdateChunck()
+        {
+            meshGenerationCompleted = false;
+            ThreadStart threadStart = UpdateChunk;
+            var thread = new Thread(threadStart);
+            thread.Start();
         }
 
         public void UpdateChunk()
@@ -45,8 +67,6 @@ namespace Assets.Scripts.Controllers
             verticies = new List<Vector3>();
             uvs = new List<Vector2>();
             triangles = new List<int>();
-
-            chunkMesh.Clear();
 
             var chunkBlocks = ChunkData.Blocks;
 
@@ -128,7 +148,8 @@ namespace Assets.Scripts.Controllers
                     }
                 }
             }
-            FinalizeChunk();
+            //FinalizeChunk();
+            meshGenerationCompleted = true;
         }
 
         public bool CheckSides(RVector3 blockPosition, BlockFace blockFace)
@@ -210,6 +231,9 @@ namespace Assets.Scripts.Controllers
 
         void UpdateChunkUV(int blockID)
         {
+            //shrink the texture uv if ground block
+            float uvShrink = blockID < 8 ? 0 : textureInterval.x / TextureBlockSize.x;
+
             //because 0 is empty
             blockID = blockID - 1;
 
@@ -220,20 +244,28 @@ namespace Assets.Scripts.Controllers
             triangles.Add(verticiesIndex + 2);
             triangles.Add(verticiesIndex + 3);
             triangles.Add(verticiesIndex);
-
-
-            var textureID = new Vector2(
+            
+            var subTextureIndex = new Vector2(
                 textureInterval.x * (blockID % atlasSize.x),
-                -textureInterval.y * Mathf.FloorToInt(blockID / atlasSize.y));
+                1 - textureInterval.y * Mathf.FloorToInt(blockID / atlasSize.y));
 
-            uvs.Add(new Vector2(textureID.x, textureID.y - textureInterval.y));
-            uvs.Add(new Vector2(textureID.x + textureInterval.x, textureID.y - textureInterval.y));
-            uvs.Add(new Vector2(textureID.x + textureInterval.x, textureID.y));
-            uvs.Add(new Vector2(textureID.x, textureID.y));
+            uvs.Add(new Vector2(
+                subTextureIndex.x + uvShrink,
+                subTextureIndex.y - textureInterval.y + uvShrink));
+            uvs.Add(new Vector2(
+                subTextureIndex.x + textureInterval.x - uvShrink,
+                subTextureIndex.y - textureInterval.y + uvShrink));
+            uvs.Add(new Vector2(
+                subTextureIndex.x + textureInterval.x - uvShrink, 
+                subTextureIndex.y - uvShrink));
+            uvs.Add(new Vector2(
+                subTextureIndex.x + uvShrink, 
+                subTextureIndex.y - uvShrink));
         }
 
         void FinalizeChunk()
         {
+            chunkMesh.Clear();
             chunkMesh.vertices = verticies.ToArray();
             chunkMesh.triangles = triangles.ToArray();
             chunkMesh.uv = uvs.ToArray();
