@@ -12,6 +12,14 @@ namespace Assets.Scripts.Network
             = new Dictionary<string, Action<object>>();
 
         protected NetworkBus NetworkBus;
+        
+        protected bool IsSinglePlayer
+        {
+            get
+            {
+                return NetworkBus == null || NetworkBus.LocalIdentity == null;
+            }
+        }
 
         public void RegisterMessageHandler<T>(Action<object> handler)
         {
@@ -65,7 +73,14 @@ namespace Assets.Scripts.Network
 
         protected void Send<T>(T data, bool sendToSelf = false)
         {
-            NetworkBus.LocalBus.SendMessage(data, sendToSelf);
+            if (IsSinglePlayer)
+            {
+                OnMessageReceived(new NetworkBusEnvelope(data));
+            }
+            else
+            {
+                NetworkBus.LocalBus.SendMessage(data, sendToSelf);
+            }
         }
 
         public void OnMessageReceived(NetworkBusEnvelope envelope)

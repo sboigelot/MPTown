@@ -173,7 +173,7 @@ namespace Assets.Scripts.Controllers
 
         public void Initialize()
         {
-            if (NetworkBus.IsServer)
+            if (IsSinglePlayer || NetworkBus.IsServer)
             {
                 InitMapData();
             }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection.Emit;
+using System.Threading;
 using Assets.Scripts.Helpers;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -25,7 +26,7 @@ namespace Assets.Scripts.Network
         private readonly Dictionary<Guid, List<NetworkBusEnvelope>> subBox = new Dictionary<Guid, List<NetworkBusEnvelope>>();
         
         public List<NetworkBusUser> NetworkBusUsers = new List<NetworkBusUser>();
-
+        
         public static bool IsServer
         {
             get { return LocalIdentity != null && LocalIdentity.isServer; }
@@ -99,35 +100,17 @@ namespace Assets.Scripts.Network
 
             if (!isLocalPlayer)
                 return;
-
+            
             var data = BinarySerializationHelper.Serialize(message);
 
             if (data.Length > MaxBufferSize)
             {
-                var splitSize = MaxBufferSize / 2;
-                var groupId = Guid.NewGuid();
-                var groupSize = (int) Math.Ceiling((float) data.Length / splitSize);
-
-                for (var i = 0; i < groupSize; i ++)
-                {
-                    var payload = data.Skip(i * splitSize).Take(splitSize).ToArray();
-                    var subEnveloppe = new NetworkBusEnvelope(
-                        groupId,
-                        i,
-                        groupSize,
-                        payload);
-                    
-                    outbox.Enqueue(
-                        new OutgoingNetworkBusEnvelope
-                        {
-                            Envelope = subEnveloppe,
-                            SendToSelf = outgoingNetworkBusEnvelope.SendToSelf
-                        });
-                }
-
+                ThreadStart threadStart = () => SplitOutgoingEnvelope(outgoingNetworkBusEnvelope, data);
+                Thread spliThread = new Thread(threadStart);
+                spliThread.Start();
                 return;
             }
-            
+
             if (isServer)
             {
                 Broadcast(data, outgoingNetworkBusEnvelope.SendToSelf);
@@ -135,6 +118,30 @@ namespace Assets.Scripts.Network
             else
             {
                 CmdSendToServer(data);
+            }
+        }
+
+        private void SplitOutgoingEnvelope(OutgoingNetworkBusEnvelope outgoingNetworkBusEnvelope, byte[] data)
+        {
+            var splitSize = MaxBufferSize / 2;
+            var groupId = Guid.NewGuid();
+            var groupSize = (int)Math.Ceiling((float)data.Length / splitSize);
+
+            for (var i = 0; i < groupSize; i++)
+            {
+                var payload = data.Skip(i * splitSize).Take(splitSize).ToArray();
+                var subEnveloppe = new NetworkBusEnvelope(
+                    groupId,
+                    i,
+                    groupSize,
+                    payload);
+
+                outbox.Enqueue(
+                    new OutgoingNetworkBusEnvelope
+                    {
+                        Envelope = subEnveloppe,
+                        SendToSelf = outgoingNetworkBusEnvelope.SendToSelf
+                    });
             }
         }
 
@@ -149,20 +156,6 @@ namespace Assets.Scripts.Network
             foreach (var client in NetworkServer.connections)
             {
                 var playerController = client.playerControllers[0];
-                if (playerController.playerControllerId == LocalIdentity.playerControllerId)
-                {
-                    //TODO this doesn't seem to allow network transfert anymore
-                    //if (!sendToSelf)
-                    //{
-                    //    continue;
-                    //}
-
-                    //TODO possible bypass to not sent to self through socket
-                    //var message = BinarySerializationHelper.Deserialize<NetworkBusEnvelope>(data);
-                    //inbox.Enqueue(message);
-                    //continue;
-                }
-
                 var player = playerController.gameObject;
                 var chatController = player.GetComponent<NetworkBus>();
                 chatController.RpcSendToClients(data);
