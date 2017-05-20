@@ -116,6 +116,7 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 4438350}
+  - component: {fileID: 4438352}
   - component: {fileID: 4438351}
   m_Layer: 0
   m_Name: Map
@@ -158,6 +159,18 @@ MonoBehaviour:
   TreePrefabs:
   - {fileID: 1059386413700242, guid: 651aa46a5482f554a8097f7abd6aaf55, type: 2}
   - {fileID: 1059386413700242, guid: 1c1255107da592d4bb70ab76fa58fcd3, type: 2}
+--- !u!114 &4438352
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 4438349}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9aa2ff06810e1e4eb479d7c01ca3555, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ConnexionDistance: 1
 --- !u!1 &15886249
 GameObject:
   m_ObjectHideFlags: 0
@@ -2086,8 +2099,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 4438351}
-        m_MethodName: Initialize
+      - m_Target: {fileID: 1161569024}
+        m_MethodName: OnClickHost
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

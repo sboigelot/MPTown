@@ -158,6 +158,7 @@
     <Compile Include="Assets\Scripts\Helpers\ObjectExtensions.cs" />
     <Compile Include="Assets\Scripts\Helpers\TransformExtensions.cs" />
     <Compile Include="Assets\Scripts\Helpers\ZipHelper.cs" />
+    <Compile Include="Assets\Scripts\Navigation\NavWeb.cs" />
     <Compile Include="Assets\Scripts\Network\MPTownNetworkManager.cs" />
     <Compile Include="Assets\Scripts\Network\NetworkBus.cs" />
     <Compile Include="Assets\Scripts\Network\NetworkBusEnvelope.cs" />

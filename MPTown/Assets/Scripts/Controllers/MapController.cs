@@ -3,12 +3,14 @@ using System.Linq;
 using Assets.Scripts.Data;
 using Assets.Scripts.Data.Messages;
 using Assets.Scripts.Helpers;
+using Assets.Scripts.Navigation;
 using Assets.Scripts.Network;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace Assets.Scripts.Controllers
 {
+    [RequireComponent(typeof(NavWeb))]
     public class MapController : NetworkBusUser
     {
         public float BlockSize = 1f;
@@ -183,6 +185,9 @@ namespace Assets.Scripts.Controllers
             if (chunkController != null)
             {
                 chunkController.SetBlock(cubeChunkIndex, editBlockIndex);
+                GetComponent<NavWeb>()
+                    .RecalculateBlockNavigation(cubeChunkIndex.x, cubeChunkIndex.y, cubeChunkIndex.z, chunk.Blocks,
+                        chunkIndex);
             }
         }
 
@@ -318,6 +323,8 @@ namespace Assets.Scripts.Controllers
                 tree.transform.localScale = new Vector3(info.Scale, info.Scale, info.Scale);
                 tree.transform.position = anchor;
             }
+
+            GetComponent<NavWeb>().InitializeFromMapData(MapData);
         }
     }
 }

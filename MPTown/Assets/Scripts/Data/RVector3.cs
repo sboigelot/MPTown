@@ -55,17 +55,7 @@ namespace Assets.Scripts.Data
         {
             return new RVector3(a.x * b, a.y * b, a.z * b);
         }
-
-        public static bool operator ==(RVector3 a, RVector3 b)
-        {
-            return a.x == b.x && a.y == b.y && a.z == b.z;
-        }
-
-        public static bool operator !=(RVector3 a, RVector3 b)
-        {
-            return a.x != b.x || a.y != b.y || a.z != b.z;
-        }
-
+        
         public static implicit operator Vector3(RVector3 a)
         {
             return a.ToVector3();
