@@ -6,6 +6,6 @@ namespace Assets.Scripts.Data
     public struct ChunkData
     {
         public RVector3 MapPosition;
-        public ushort[,,] Blocks;
+        public BlockData[,,] Blocks;
     }
 }

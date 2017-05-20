@@ -17,7 +17,6 @@ namespace Assets.Scripts.Controllers
         public Vector2 TextureBlockSize;
 
         public Mesh chunkMesh;
-        public RVector3 Position;
         public RVector3 Size;
 
         public float BlockSize;
@@ -76,7 +75,7 @@ namespace Assets.Scripts.Controllers
                 {
                     for (var zi = 0; zi < Size.z; zi++)
                     {
-                        int blockType = chunkBlocks[xi, yi, zi];
+                        int blockType = chunkBlocks[xi, yi, zi].BlockType;
                         if (blockType != 0)
                         {
                             var blockIndex = new RVector3(xi, yi, zi);
@@ -167,7 +166,7 @@ namespace Assets.Scripts.Controllers
 
                     if (y + 1 < Size.y)
                     {
-                        if (chunkBlocks[x, y + 1, z] != 0)
+                        if (chunkBlocks[x, y + 1, z].BlockType != 0)
                         {
                             return false;
                         }
@@ -176,7 +175,7 @@ namespace Assets.Scripts.Controllers
 
                 case BlockFace.Bottom: //Checks bottom face
 
-                    if (y - 1 >= 0 && chunkBlocks[x, y - 1, z] != 0)
+                    if (y - 1 >= 0 && chunkBlocks[x, y - 1, z].BlockType != 0)
                     {
                         return false;
                     }
@@ -186,7 +185,7 @@ namespace Assets.Scripts.Controllers
 
                     if (x + 1 < Size.x)
                     {
-                        if (chunkBlocks[x + 1, y, z] != 0)
+                        if (chunkBlocks[x + 1, y, z].BlockType != 0)
                         {
                             return false;
                         }
@@ -197,7 +196,7 @@ namespace Assets.Scripts.Controllers
 
                     if (x - 1 >= 0)
                     {
-                        if (chunkBlocks[x - 1, y, z] != 0)
+                        if (chunkBlocks[x - 1, y, z].BlockType != 0)
                         {
                             return false;
                         }
@@ -208,7 +207,7 @@ namespace Assets.Scripts.Controllers
 
                     if (z + 1 < Size.z)
                     {
-                        if (chunkBlocks[x, y, z + 1] != 0)
+                        if (chunkBlocks[x, y, z + 1].BlockType != 0)
                         {
                             return false;
                         }
@@ -219,7 +218,7 @@ namespace Assets.Scripts.Controllers
 
                     if (z - 1 >= 0)
                     {
-                        if (chunkBlocks[x, y, z - 1] != 0)
+                        if (chunkBlocks[x, y, z - 1].BlockType != 0)
                         {
                             return false;
                         }
@@ -284,7 +283,7 @@ namespace Assets.Scripts.Controllers
 
             Send(new UpdateBlockMessage
             {
-                ChunkPosition = Position,
+                ChunkPosition = ChunkData.MapPosition,
                 BlockPosition = buildPosCube,
                 BlockType = blocktype
             },
@@ -300,13 +299,13 @@ namespace Assets.Scripts.Controllers
         {
             var updateBlockMessage = (UpdateBlockMessage) payload;
 
-            if (updateBlockMessage.ChunkPosition.x != Position.x ||
-                updateBlockMessage.ChunkPosition.y != Position.y ||
-                updateBlockMessage.ChunkPosition.z != Position.z)
+            if (updateBlockMessage.ChunkPosition.x != ChunkData.MapPosition.x ||
+                updateBlockMessage.ChunkPosition.y != ChunkData.MapPosition.y ||
+                updateBlockMessage.ChunkPosition.z != ChunkData.MapPosition.z)
                 return;
 
             var buildPosCube = updateBlockMessage.BlockPosition;
-            ChunkData.Blocks[buildPosCube.x, buildPosCube.y, buildPosCube.z] = updateBlockMessage.BlockType;
+            ChunkData.Blocks[buildPosCube.x, buildPosCube.y, buildPosCube.z].BlockType = updateBlockMessage.BlockType;
             UpdateChunk();
         }
     }

@@ -13,11 +13,13 @@
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
-    <CompilerResponseFile></CompilerResponseFile>
+    <CompilerResponseFile>
+    </CompilerResponseFile>
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows:5</UnityBuildTarget>
     <UnityVersion>5.6.0f3</UnityVersion>
-    <RootNamespace></RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <LangVersion Condition=" '$(VisualStudioVersion)' != '10.0' ">4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -129,6 +131,7 @@
     <Compile Include="Assets\PostProcessing\Runtime\Utils\MaterialFactory.cs" />
     <Compile Include="Assets\PostProcessing\Runtime\Utils\RenderTextureFactory.cs" />
     <Compile Include="Assets\PostProcessing\Utilities\CustomMotionTexture\ExampleWheelController.cs" />
+    <Compile Include="Assets\Scripts\Controllers\BlockObjectController.cs" />
     <Compile Include="Assets\Scripts\Controllers\ChunkController.cs" />
     <Compile Include="Assets\Scripts\Controllers\ClientSideTraveller.cs" />
     <Compile Include="Assets\Scripts\Controllers\MapController.cs" />
@@ -136,11 +139,16 @@
     <Compile Include="Assets\Scripts\Controllers\PlayerChatcontrollerUsingNetworkBus.cs" />
     <Compile Include="Assets\Scripts\Controllers\RobotController.cs" />
     <Compile Include="Assets\Scripts\Controllers\SimpleRtsCam.cs" />
+    <Compile Include="Assets\Scripts\Data\BlockData.cs" />
     <Compile Include="Assets\Scripts\Data\BlockFace.cs" />
+    <Compile Include="Assets\Scripts\Data\BlockObjectData.cs" />
     <Compile Include="Assets\Scripts\Data\ChunkData.cs" />
     <Compile Include="Assets\Scripts\Data\InventoryData.cs" />
     <Compile Include="Assets\Scripts\Data\MapData.cs" />
     <Compile Include="Assets\Scripts\Data\MapGenerator.cs" />
+    <Compile Include="Assets\Scripts\Data\Messages\GrowTreeInfo.cs" />
+    <Compile Include="Assets\Scripts\Data\Messages\GrowTreeMessage.cs" />
+    <Compile Include="Assets\Scripts\Data\Messages\MapInitializationMessage.cs" />
     <Compile Include="Assets\Scripts\Data\Messages\UpdateBlockMessage.cs" />
     <Compile Include="Assets\Scripts\Data\RVector3.cs" />
     <Compile Include="Assets\Scripts\Data\RobotData.cs" />
@@ -149,10 +157,13 @@
     <Compile Include="Assets\Scripts\Helpers\Noise.cs" />
     <Compile Include="Assets\Scripts\Helpers\ObjectExtensions.cs" />
     <Compile Include="Assets\Scripts\Helpers\TransformExtensions.cs" />
+    <Compile Include="Assets\Scripts\Helpers\ZipHelper.cs" />
+    <Compile Include="Assets\Scripts\Network\MPTownNetworkManager.cs" />
     <Compile Include="Assets\Scripts\Network\NetworkBus.cs" />
     <Compile Include="Assets\Scripts\Network\NetworkBusEnvelope.cs" />
     <Compile Include="Assets\Scripts\Network\NetworkBusUser.cs" />
     <Compile Include="Assets\Scripts\Network\QueuedNetworkBusEnvelope.cs" />
+    <Compile Include="Assets\Scripts\UiControllers\SelectTileDropDownController.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\PostProcessing\Editor Resources\Monitors\HistogramCompute.compute" />

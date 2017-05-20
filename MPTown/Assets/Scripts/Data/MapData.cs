@@ -6,5 +6,6 @@ namespace Assets.Scripts.Data
     public class MapData
     {
         public ChunkData[,,] Chunks;
+        public float[,] ChunkHeights { get; set; }
     }
 }

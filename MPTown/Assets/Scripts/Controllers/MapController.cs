@@ -1,9 +1,11 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Assets.Scripts.Data;
+using Assets.Scripts.Data.Messages;
 using Assets.Scripts.Helpers;
 using Assets.Scripts.Network;
 using UnityEngine;
-using Random = UnityEngine.Random;
+using UnityEngine.EventSystems;
 
 namespace Assets.Scripts.Controllers
 {
@@ -11,7 +13,7 @@ namespace Assets.Scripts.Controllers
     {
         public float BlockSize = 1f;
         public Material ChunckMaterial;
-        public Vector3 ChunckSize = new Vector3(16, 16, 16);
+        public Vector3 ChunkSize = new Vector3(16, 16, 16);
 
         public ushort EditBlockIndex = 10;
         public GameObject Highlighter;
@@ -19,6 +21,8 @@ namespace Assets.Scripts.Controllers
         private MapData mapData;
         public Vector3 MapSize = new Vector3(2, 1, 2);
         public Vector2 TextureBlockSize = new Vector2(128, 128);
+
+        public GameObject[] TreePrefabs;
 
         public MapData MapData
         {
@@ -32,16 +36,10 @@ namespace Assets.Scripts.Controllers
                 }
 
                 mapData = value;
-                OnMapDataChanged();
+                InvalidateVisual();
             }
         }
-
-        private void OnMapDataChanged()
-        {
-            InvalidateVisual();
-            SendIfServer(mapData);
-        }
-
+        
         private void InvalidateVisual()
         {
             transform.ClearChildren();
@@ -76,8 +74,7 @@ namespace Assets.Scripts.Controllers
             meshRenderer.sharedMaterial = ChunckMaterial;
             var chunckController = chunkGameObject.AddComponent<ChunkController>();
             chunckController.ChunkData = chunk;
-            chunckController.Size = new RVector3(ChunckSize);
-            chunckController.Position = new RVector3(position);
+            chunckController.Size = new RVector3(ChunkSize);
             chunckController.TextureBlockSize = TextureBlockSize;
             chunckController.BlockSize = BlockSize;
 
@@ -88,6 +85,9 @@ namespace Assets.Scripts.Controllers
 
         public void Update()
         {
+            if (EventSystem.current.IsPointerOverGameObject())
+                return;
+
             var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
@@ -101,7 +101,7 @@ namespace Assets.Scripts.Controllers
                     if (Highlighter != null)
                     {
                         var hs = BlockSize / 2;
-                        Highlighter.transform.position = cubeWorldPos + new Vector3(hs,hs,hs);
+                        Highlighter.transform.position = cubeWorldPos + new Vector3(hs, hs, hs);
                     }
 
                     if (Input.GetMouseButtonDown(0))
@@ -125,42 +125,80 @@ namespace Assets.Scripts.Controllers
                 Mathf.FloorToInt(hitPos.z));
 
             //TODO if face x-1 or face z-1 change vx & vy
-            
-            int vx = 0;
+
+            var vx = 0;
             if (Input.GetKey(KeyCode.LeftControl))
-                vx -= (int)BlockSize;
+                vx -= (int) BlockSize;
 
-            int vy = 0;
+            var vy = 0;
             if (Input.GetKey(KeyCode.LeftShift))
-                vy -= (int)BlockSize;
+                vy -= (int) BlockSize;
 
-            int vz = 0;
+            var vz = 0;
             if (Input.GetKey(KeyCode.LeftAlt))
-                vz -= (int)BlockSize;
-            
-            return new RVector3(hitPosCube.x + vx, hitPosCube.y + vy, hitPosCube.z +vz);
+                vz -= (int) BlockSize;
+
+            return new RVector3(hitPosCube.x + vx, hitPosCube.y + vy, hitPosCube.z + vz);
         }
 
         private void ClickChunck(GameObject chunkGameObject, Vector3 cubeWorldPos, ushort editBlockIndex)
         {
-            //TODO we have to build in an adjacent chunk if we go outside of the chunk boudaries
-
             var chunkController = chunkGameObject.GetComponent<ChunkController>();
             var chunk = chunkController.ChunkData;
+            var chunkIndex = chunk.MapPosition;
 
             var chunkRelativeWorldPos = cubeWorldPos - chunkController.gameObject.transform.position;
             var cubeChunkIndex = new RVector3(chunkRelativeWorldPos);
-
+            
+            if (cubeChunkIndex.x < 0)
+            {
+                cubeChunkIndex.x += (int)ChunkSize.x;
+                chunkIndex.x -= 1;
+                chunkController = GetChunkAtPosition(chunkIndex);
+                chunk = chunkController.ChunkData;
+            }
+            if (cubeChunkIndex.z < 0)
+            {
+                cubeChunkIndex.z += (int)ChunkSize.x;
+                chunkIndex.z -= 1;
+                chunkController = GetChunkAtPosition(chunkIndex);
+                chunk = chunkController.ChunkData;
+            }
+            if (cubeChunkIndex.x >= ChunkSize.x)
+            {
+                cubeChunkIndex.x -= (int)ChunkSize.x;
+                chunkIndex.x += 1;
+                chunkController = GetChunkAtPosition(chunkIndex);
+                chunk = chunkController.ChunkData;
+            }
+            if (cubeChunkIndex.z >= ChunkSize.z)
+            {
+                cubeChunkIndex.z -= (int)ChunkSize.x;
+                chunkIndex.z += 1;
+                chunkController = GetChunkAtPosition(chunkIndex);
+                chunk = chunkController.ChunkData;
+            }
+            
             //Debug.LogFormat("Hit chunk {2} {0} at cube {1}", chunk.MapPosition, cubeChunkIndex, chunkRelativeWorldPos);
-            chunkController.SetBlock(cubeChunkIndex, editBlockIndex);
+            if (chunkController != null)
+            {
+                chunkController.SetBlock(cubeChunkIndex, editBlockIndex);
+            }
+        }
+
+        private ChunkController GetChunkAtPosition(RVector3 chunkIndex)
+        {
+            return GetComponentsInChildren<ChunkController>().FirstOrDefault(
+                c => c.ChunkData.MapPosition == chunkIndex
+            );
         }
 
         private Vector3 ChunkToWorldPosition(Vector3 position)
         {
             return new Vector3(
-                position.x * BlockSize * ChunckSize.x,
-                position.y * BlockSize * ChunckSize.y,
-                position.z * BlockSize * ChunckSize.z);
+                position.x * BlockSize * ChunkSize.x,
+                position.y * BlockSize * ChunkSize.y,
+                position.z * BlockSize * ChunkSize.z);
         }
 
         private Vector3 BlockToChunkRelativeWorldPosition(Vector3 position)
@@ -175,25 +213,110 @@ namespace Assets.Scripts.Controllers
         {
             if (IsSinglePlayer || NetworkBus.IsServer)
             {
-                InitMapData();
+                SendIfServer(new MapInitializationMessage
+                {
+                    ChunckSize = new RVector3(ChunkSize),
+                    MapSize = new RVector3(MapSize),
+                    Seed = Random.Range(100, 10000),
+                    Intensity = (int)ChunkSize.y * 3 / 4,
+                    TreeDensityPerChunk = Random.Range(2, 7)
+                });
             }
-        }
-
-        private void InitMapData()
-        {
-            MapData = new MapGenerator().GenerateMap(MapSize, ChunckSize, Random.Range(100, 10000), 16f);
         }
 
         protected override void RegisterMessageHandlers()
         {
-            RegisterMessageHandler<MapData>(OnMapDataReceived);
+            RegisterMessageHandler<MapInitializationMessage>(OnMapInitializationMessageReceived);
+            RegisterMessageHandler<GrowTreeMessage>(OnGrowTreeMessageReceived);
         }
 
-        private void OnMapDataReceived(object payload)
+        public void OnMapInitializationMessageReceived(object payload)
         {
-            if (!NetworkBus.IsServer)
+            var init = (MapInitializationMessage)payload;
+            MapData = new MapGenerator().GenerateMap(init.MapSize, init.ChunckSize, init.Seed, init.Intensity);
+            GenerateTreePosition(init);
+        }
+
+        private void GenerateTreePosition(MapInitializationMessage init)
+        {
+            if (IsSinglePlayer || NetworkBus.IsServer)
             {
-                MapData = payload as MapData;
+                int numberOfTrees = init.TreeDensityPerChunk * init.MapSize.x * init.MapSize.z;
+
+                var growTreeMessage = new GrowTreeMessage
+                {
+                    GrowTreeInfos = new List<GrowTreeInfo>()
+                };
+
+                for (int i = 0; i <= numberOfTrees; i++)
+                {
+                    var info = new GrowTreeInfo
+                    {
+                        ChunkX = (ushort)Random.Range(0, init.MapSize.x),
+                        ChunkZ = (ushort)Random.Range(0, init.MapSize.z),
+                        InChunkX = (ushort)Random.Range(0, init.ChunckSize.x),
+                        InChunkZ = (ushort)Random.Range(0, init.ChunckSize.z),
+                        Scale = Random.Range(0.6f, 1.4f),
+                        TreeType = (ushort)Random.Range(0, TreePrefabs.Length)
+                    };
+                    info.InChunkY = GetTopBlockHeight(info.ChunkX, info.ChunkZ, info.InChunkX, info.InChunkZ);
+                    growTreeMessage.GrowTreeInfos.Add(info);
+                }
+
+                SendIfServer(growTreeMessage);
+            }
+        }
+
+        private ushort GetTopBlockHeight(int chunkX, int chunkZ, int inChunkX, int inChunkZ)
+        {
+            var h = (ushort)(MapData.ChunkHeights[
+                                                  chunkX * (int)ChunkSize.x +
+                                                  inChunkX,
+                                                  chunkZ * (int)ChunkSize.z +
+                                                  inChunkZ] + 1);
+            return h;
+        }
+
+        private void OnGrowTreeMessageReceived(object payload)
+        {
+            var message = (GrowTreeMessage)payload;
+
+            foreach (var info in message.GrowTreeInfos)
+            {
+                var treeData = new BlockObjectData
+                {
+                    ObjectType = "tree",
+                    SubType = info.TreeType
+                };
+                var chunk = MapData.Chunks[info.ChunkX, 0, info.ChunkZ];
+                var block = chunk.Blocks[info.InChunkX, info.InChunkY, info.InChunkZ];
+                block.ObjectDataData = treeData;
+
+                var tree = Instantiate(TreePrefabs[info.TreeType]);
+                tree.transform.SetParent(this.transform);
+
+                var blockObjectController = tree.GetComponent<BlockObjectController>() ??
+                                            tree.AddComponent<BlockObjectController>();
+                blockObjectController.Data = treeData;
+
+                var chunkPosition =
+                    ChunkToWorldPosition(
+                        new Vector3(
+                            info.ChunkX,
+                            0,
+                            info.ChunkZ));
+
+                var inChunkPosition =
+                    BlockToChunkRelativeWorldPosition(
+                        new Vector3(
+                            info.InChunkX,
+                            info.InChunkY,
+                            info.InChunkZ));
+
+
+                var anchor = chunkPosition + inChunkPosition;
+                tree.transform.localScale = new Vector3(info.Scale, info.Scale, info.Scale);
+                tree.transform.position = anchor;
             }
         }
     }

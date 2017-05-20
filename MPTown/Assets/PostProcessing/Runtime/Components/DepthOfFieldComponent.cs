@@ -40,7 +40,7 @@ namespace UnityEngine.PostProcessing
 
         RenderTexture m_CoCHistory;
 
-        // Height of the 35mm full-frame format (36mm x 24mm)
+        // InChunkY of the 35mm full-frame format (36mm x 24mm)
         const float k_FilmHeight = 0.024f;
 
         float CalculateFocalLength()

@@ -7,17 +7,16 @@ namespace Assets.Scripts.Data
     {
         public MapData GenerateMap(Vector3 MapSize, Vector3 ChunckSize, int seed, float intensity)
         {
-            float[,] chunkHeights = Noise.Generate(
-                (int)((MapSize.x + 1) * ChunckSize.x), 
-                (int)((MapSize.z + 1) * ChunckSize.z), 
-                seed, 
-                intensity);
-
             var map = new MapData
             {
-                Chunks = new ChunkData[(int)MapSize.x, (int)MapSize.y, (int)MapSize.z]
+                Chunks = new ChunkData[(int) MapSize.x, (int) MapSize.y, (int) MapSize.z],
+                ChunkHeights = Noise.Generate(
+                    (int) ((MapSize.x + 1) * ChunckSize.x),
+                    (int) ((MapSize.z + 1) * ChunckSize.z),
+                    seed,
+                    intensity)
             };
-
+            
             this.ForXyz(
                 map.Chunks.GetLength(0),
                 map.Chunks.GetLength(1),
@@ -26,7 +25,7 @@ namespace Assets.Scripts.Data
                 {
                     map.Chunks[x, y, z] = new ChunkData
                     {
-                        Blocks = new ushort[(int) ChunckSize.x, (int) ChunckSize.y, (int) ChunckSize.z],
+                        Blocks = new BlockData[(int) ChunckSize.x, (int) ChunckSize.y, (int) ChunckSize.z],
                         MapPosition = new RVector3(x, y, z)
                     };
 
@@ -39,8 +38,11 @@ namespace Assets.Scripts.Data
                         blocks.GetLength(2),
                         (cx, cy, cz) =>
                         {
-                            var h = chunkHeights[cx + x * (int) ChunckSize.x, cz + z * (int) ChunckSize.z];
-                            blocks[cx, cy, cz] = GetBlock(h, cx, cy, cz);
+                            var h = map.ChunkHeights[cx + x * (int) ChunckSize.x, cz + z * (int) ChunckSize.z];
+                            blocks[cx, cy, cz] = new BlockData
+                            {
+                                BlockType = GetBlock(h, cx, cy, cz)
+                            };
                         });
                 });
 
