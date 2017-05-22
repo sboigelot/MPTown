@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 using Assets.Scripts.Data;
 using Assets.Scripts.Helpers;
@@ -15,6 +16,7 @@ namespace Assets.Scripts.Navigation
         public void InitializeFromMapData(MapData mapData)
         {
             //Set all air block without tree as navigable
+            NavPoints = new RVector3Table();
 
             var chunks = mapData.Chunks;
             this.ForXyz(chunks.GetLength(0),
@@ -26,9 +28,9 @@ namespace Assets.Scripts.Navigation
                     var blocks = chunk.Blocks;
 
                     var chunkOffset = new RVector3(
-                        cx * (blocks.GetLength(0) - 1),
-                        cy * (blocks.GetLength(1) - 1),
-                        cz * (blocks.GetLength(2) - 1));
+                        cx * (blocks.GetLength(0)),
+                        cy * (blocks.GetLength(1)),
+                        cz * (blocks.GetLength(2)));
 
                     this.ForXyz(
                         blocks.GetLength(0),
@@ -52,6 +54,7 @@ namespace Assets.Scripts.Navigation
                 var blockOnBottomIsAir = by == 0 ||
                                          blocks[bx, by - 1, bz].BlockType == 0 &&
                                          blocks[bx, by - 1, bz].ObjectDataData == null;
+
                 var blockOnTopIsAir = by == (blocks.GetLength(2) - 1) ||
                                       blocks[bx, by + 1, bz].BlockType == 0;
 
@@ -100,7 +103,42 @@ namespace Assets.Scripts.Navigation
 
             return con;
         }
-        
+
+        public List<RVector3> FindPath(RVector3 origin, RVector3 destination)
+        {
+            var path = new List<RVector3> { origin };
+
+            var evaluated = new List<RVector3> { origin };
+
+            int maxSearch = 100;
+            while (maxSearch > 0)
+            {
+                maxSearch--;
+                var openConnexion = GetConnexion(path.Last())
+                    .Where(c => !evaluated.Contains(c))
+                    .OrderBy(c => Vector3.Distance(c, destination))
+                    .ToList();
+
+                var nextStep = openConnexion.FirstOrDefault();
+
+                if (nextStep == null)
+                {
+                    Debug.LogFormat("Coudn't find a parth from {0} to {1}", origin, destination);
+                    return null;
+                }
+
+                path.Add(nextStep);
+                evaluated.Add(nextStep);
+
+                if (nextStep.x == destination.x &&
+                    nextStep.y == destination.y &&
+                    nextStep.z == destination.z)
+                    return path;
+            }
+            Debug.LogFormat("Coudn't find a parth from {0} to {1} (max search reached)", origin, destination);
+            return null;
+        }
+
         public void OnDrawGizmos()
         {
             Gizmos.color = Color.red;

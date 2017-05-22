@@ -85,6 +85,10 @@ namespace Assets.Scripts.Controllers
             rigidBody.isKinematic = true;
         }
 
+        private RVector3 debugOriginForPath;
+        private RVector3 debugDestinationForPath;
+        private List<RVector3> debugPath;
+
         public void Update()
         {
             if (EventSystem.current.IsPointerOverGameObject())
@@ -106,6 +110,18 @@ namespace Assets.Scripts.Controllers
                         Highlighter.transform.position = cubeWorldPos + new Vector3(hs, hs, hs);
                     }
 
+                    if (Input.GetKeyUp(KeyCode.G))
+                    {
+                        debugPath = new List<RVector3>();
+                        debugOriginForPath = new RVector3(cubeWorldPos);
+                    }
+
+                    if (Input.GetKeyDown(KeyCode.H))
+                    {
+                        debugDestinationForPath = new RVector3(cubeWorldPos);
+                        debugPath = GetComponent<NavWeb>().FindPath(debugOriginForPath, debugDestinationForPath);
+                    }
+
                     if (Input.GetMouseButtonDown(0))
                     {
                         ClickChunck(hit.collider.gameObject, cubeWorldPos, EditBlockIndex);
@@ -116,6 +132,28 @@ namespace Assets.Scripts.Controllers
                         ClickChunck(hit.collider.gameObject, cubeWorldPos, 0);
                     }
                 }
+            }
+        }
+
+        public void OnDrawGizmos()
+        {
+            Gizmos.color = Color.magenta;
+            
+            if(debugOriginForPath!=null)
+            Gizmos.DrawCube(new Vector3(debugOriginForPath.x + .5f, debugOriginForPath.y, debugOriginForPath.z + .5f), Vector3.one * .2f);
+            if(debugDestinationForPath!=null)
+            Gizmos.DrawCube(new Vector3(debugDestinationForPath.x + .5f, debugDestinationForPath.y, debugDestinationForPath.z + .5f), Vector3.one * .2f);
+
+            if (debugPath == null || !debugPath.Any())
+                return;
+            
+            var o = debugPath[0];
+            var previous = new Vector3(o.x + .5f, o.y, o.z + .5f);
+            foreach (RVector3 v in debugPath.Skip(1))
+            {
+                var current = new Vector3(v.x + .5f, v.y, v.z + .5f);
+                Gizmos.DrawLine(previous, current);
+                previous = current;
             }
         }
 
@@ -186,8 +224,14 @@ namespace Assets.Scripts.Controllers
             {
                 chunkController.SetBlock(cubeChunkIndex, editBlockIndex);
                 GetComponent<NavWeb>()
-                    .RecalculateBlockNavigation(cubeChunkIndex.x, cubeChunkIndex.y, cubeChunkIndex.z, chunk.Blocks,
-                        chunkIndex);
+                    .RecalculateBlockNavigation(
+                        cubeChunkIndex.x,
+                        cubeChunkIndex.y,
+                        cubeChunkIndex.z,
+                        chunk.Blocks,
+                        new RVector3(chunkIndex.x * ChunkSize.x,
+                            chunkIndex.y * ChunkSize.y,
+                            chunkIndex.z * ChunkSize.z));
             }
         }
 

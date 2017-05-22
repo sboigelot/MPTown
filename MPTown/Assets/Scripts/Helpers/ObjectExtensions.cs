@@ -18,13 +18,13 @@ namespace Assets.Scripts.Helpers
             }
         }
 
-        public static void ForXyz(this object o, int x, int xmax, int y, int ymax, int z, int zmax, Action<int, int, int> doAction)
+        public static void ForXyz(this object o, int xstart, int xmax, int ystart, int ymax, int zstart, int zmax, Action<int, int, int> doAction)
         {
-            for (; x < xmax; x++)
+            for (int x = xstart; x < xmax; x++)
             {
-                for (; y < ymax; y++)
+                for (int y = ystart; y < ymax; y++)
                 {
-                    for (; z < zmax; z++)
+                    for (int z = zstart; z < zmax; z++)
                     {
                         doAction(x, y, z);
                     }
